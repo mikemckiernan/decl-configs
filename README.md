@@ -27,3 +27,13 @@ The purpose of the YAMLs in this repo is to show what I plan to replace our
 current `oc edit networks.operator.openshift.io cluster` command with. Instea of
 `oc edit...`, the doc can advise creating a YAML file like the sample and then
 `oc apply -f ...`.
+
+Regarding the plausibility of these YAMLs, they appear to run and work as-is on
+the hardware that is available to me.--Except the ipvlan and macvlan examples.
+Those two reliably do not work with the hardware I have and
+`k describe <pod-name>` includes the following:
+
+```text
+error adding container to network "network-macvlan-static": failed
+to create macvlan: device or resource busy
+```

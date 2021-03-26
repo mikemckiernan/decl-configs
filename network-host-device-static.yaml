@@ -8,7 +8,7 @@ spec:
     "cniVersion": "0.4.0",
     "name": "network-host-device-static",
     "type": "host-device",
-    "device": "ens3",
+    "device": "net99",
     "ipam": {
       "type": "static",
       "addresses":[
@@ -46,6 +46,6 @@ spec:
     image: quay.io/mmckiern/net-tools:latest
     imagePullPolicy: Always
     command: [ "/bin/bash", "-c", "--" ]
-    args: [ "while true; do sleep 300000; done;" ]
+    args: [ "while true; do ip a && sleep 30; done;" ]
   imagePullSecrets:
   - name: bot-pull-secret
