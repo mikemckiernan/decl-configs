@@ -29,9 +29,10 @@ current `oc edit networks.operator.openshift.io cluster` command with. Instea of
 `oc apply -f ...`.
 
 Regarding the plausibility of these YAMLs, they appear to run and work as-is on
-the hardware that is available to me.--Except the ipvlan and macvlan examples.
-Those two reliably do not work with the hardware I have and
-`k describe <pod-name>` includes the following:
+the hardware that is available to me. The ipvlan and macvlan examples require
+the sort of cluster that is available to me as "bare metal." On virtualized
+hardware, those two reliably do not work and `k describe <pod-name>` includes
+the following:
 
 ```text
 error adding container to network "network-macvlan-static": failed

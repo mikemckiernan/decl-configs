@@ -8,7 +8,7 @@ spec:
     "cniVersion": "0.4.0",
     "name": "network-host-device-static",
     "type": "host-device",
-    "device": "net99",
+    "device": "enp1s0f1",
     "ipam": {
       "type": "static",
       "addresses":[
