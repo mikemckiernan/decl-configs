@@ -4,8 +4,8 @@ kind: Subscription
 metadata:
  labels:
     operators.coreos.com/argocd-operator.argocd: ""
-  name: argocd-operator
-  namespace: argocd
+ name: argocd-operator
+ namespace: argocd
 spec:
   channel: alpha
   installPlanApproval: Automatic

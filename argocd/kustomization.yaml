@@ -1,0 +1,5 @@
+resources:
+- ns-argocd.yaml
+- cluster-role-binding-argocd.yaml
+- operator-group-argocd.yaml
+- subscription-argocd.yaml
