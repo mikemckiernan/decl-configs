@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bridge-static-pod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: network-bridge-static
+spec:
+  containers:
+  - name: testapp
+    image: quay.io/mmckiern/net-tools:latest
+    imagePullPolicy: Always
+    command: [ "/bin/bash", "-c", "--" ]
+    args: [ "while true; do ip a && sleep 30; done;" ]
+  imagePullSecrets:
+  - name: bot-pull-secret

@@ -1,0 +1,4 @@
+resources:
+- network-bridge-static.yaml
+- bot-pull-secret.yaml
+- bridge-static-pod.yaml

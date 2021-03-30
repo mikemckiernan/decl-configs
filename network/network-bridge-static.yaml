@@ -2,7 +2,7 @@
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  name: network-bridge-static-66
+  name: network-bridge-static
 spec:
   config: '{
     "cniVersion": "0.4.0",
@@ -27,27 +27,3 @@ spec:
       ]
     }
   }'
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: bot-pull-secret
-data:
-  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJxdWF5LmlvIjogewogICAgICAiYXV0aCI6ICJiVzFqYTJsbGNtNHJiVzFqYTJsbGNtNWZZbTkwT2taSE5UWkhNRlV5VlU5TVFUWmFOVFF6TkROQ1ZEQTFURkpYT1VjeVJUQXhRVlJIVTB4S1JrRlpXVXRCVjFBeU1qTlNXRWRLVEZaRFRrSTFRelZHVmtnPSIsCiAgICAgICJlbWFpbCI6ICIiCiAgICB9CiAgfQp9
-type: kubernetes.io/dockerconfigjson
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: bridge-static-pod
-  annotations:
-    k8s.v1.cni.cncf.io/networks: network-bridge-static-66
-spec:
-  containers:
-  - name: testapp
-    image: quay.io/mmckiern/net-tools:latest
-    imagePullPolicy: Always
-    command: [ "/bin/bash", "-c", "--" ]
-    args: [ "while true; do ip a && sleep 30; done;" ]
-  imagePullSecrets:
-  - name: bot-pull-secret
