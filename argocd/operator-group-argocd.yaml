@@ -1,0 +1,10 @@
+---
+# This is from -o yaml.
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  targetNamespaces:
+  - argocd
