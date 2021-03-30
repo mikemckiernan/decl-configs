@@ -2,7 +2,7 @@
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  name: network-bridge-static
+  name: network-bridge-static-66
 spec:
   config: '{
     "cniVersion": "0.4.0",
@@ -41,7 +41,7 @@ kind: Pod
 metadata:
   name: bridge-static-pod
   annotations:
-    k8s.v1.cni.cncf.io/networks: network-bridge-static
+    k8s.v1.cni.cncf.io/networks: network-bridge-static-66
 spec:
   containers:
   - name: testapp
