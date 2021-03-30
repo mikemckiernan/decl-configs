@@ -3,6 +3,7 @@ kind: Kustomization
 
 commonLabels:
   rev: "1"
+
 resources:
 - network-bridge-static.yaml
 - bot-pull-secret.yaml
