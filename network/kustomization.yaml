@@ -1,3 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonLabels:
+  rev: "1"
 resources:
 - network-bridge-static.yaml
 - bot-pull-secret.yaml
