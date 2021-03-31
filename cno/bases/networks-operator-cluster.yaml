@@ -1,0 +1,23 @@
+apiVersion: operator.openshift.io/v1
+kind: Network
+metadata:
+  name: cluster
+spec:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  defaultNetwork:
+    ovnKubernetesConfig:
+      genevePort: 6081
+      mtu: 1400
+    type: OVNKubernetes
+  deployKubeProxy: false
+  disableMultiNetwork: false
+  disableNetworkDiagnostics: false
+  logLevel: Normal
+  managementState: Managed
+  observedConfig: null
+  operatorLogLevel: Normal
+  serviceNetwork:
+  - 172.30.0.0/16
+  unsupportedConfigOverrides: null

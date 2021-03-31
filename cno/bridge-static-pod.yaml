@@ -1,0 +1,25 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridge-static-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: network-bridge-static-demo
+  template:
+    metadata:
+      labels:
+        app: network-bridge-static-demo
+      annotations:
+        k8s.v1.cni.cncf.io/networks: network-bridge-static
+    spec:
+      containers:
+        - name: testapp
+          image: quay.io/mmckiern/net-tools:latest
+          imagePullPolicy: Always
+          command: ["/bin/bash", "-c", "--"]
+          args: ["while true; do ip a && sleep 30; done;"]
+      imagePullSecrets:
+        - name: bot-pull-secret

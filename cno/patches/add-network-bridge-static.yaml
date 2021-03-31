@@ -1,0 +1,29 @@
+- op: add
+  path: /spec/additionalNetworks
+  value:
+    - name: network-bridge-static
+      type: Raw
+      namespace: mmckiern
+      rawCNIConfig: '{
+        "cniVersion": "0.4.0",
+        "name": "network-bridge-static",
+        "type": "bridge",
+        "bridge": "mynet1",
+        "ipam": {
+          "type": "static",
+          "addresses":[
+            {
+              "address": "192.168.12.66/24",
+              "gateway": "192.168.12.1"
+            },
+            {
+              "address": "3ffe:ffff:0:01ff::1/64",
+              "gateway": "3ffe:ffff:0::1"
+            }
+          ],
+          "routes": [
+            { "dst": "0.0.0.0/0" },
+            { "dst": "192.168.0.0/16", "gw": "192.168.12.1" }
+          ]
+        }
+      }'
