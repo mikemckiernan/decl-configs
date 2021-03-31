@@ -1,5 +1,14 @@
 # Fiddling
 
+## TL;DR
+
+These files are simply worse and messier than the work in the two directories
+related to ArgoCD:
+
+<https://github.com/RedHatWorkshops/argocd-getting-started/tree/main/resources/manifests>
+
+## In case you kept scrolling
+
 Run the following command to install the ArgoCD operator:
 
 ```bash
@@ -12,10 +21,9 @@ After the operator is installed, add an instance of ArgoCD:
 oc apply -f /path/to/decl-configs/argocd/argocd-argocd.yaml
 ```
 
-> Why the clever file name?  I'm kicking around the idea that files
-> should be named according to the k8s kind and the name of the
-> k8s object.  In the preceding case, the object is of kind ArgoCD
-> and the instance is named argocd.
+> Why the clever file name? I'm kicking around the idea that files should be
+> named according to the k8s kind and the name of the k8s object. In the
+> preceding case, the object is of kind ArgoCD and the instance is named argocd.
 
 Display the route to get the URL for the ArgoCD UI:
 
@@ -28,4 +36,3 @@ credentials.
 
 Remember to also follow the steps like `argocd login --sso ...` and
 `argocd cluster add`.
-
