@@ -14,6 +14,7 @@ spec:
         app: network-bridge-static-demo
       annotations:
         k8s.v1.cni.cncf.io/networks: network-bridge-static
+      generateName: bridge-static-
     spec:
       containers:
         - name: testapp
