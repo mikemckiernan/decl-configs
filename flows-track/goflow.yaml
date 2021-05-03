@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: goflow
+  name: goflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goflow
+  template:
+    metadata:
+      labels:
+        app: goflow
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - /goflow -kafka=false -logfmt=json 2>&1
+        image: cloudflare/goflow
+        imagePullPolicy: Always
+        name: goflow
+        resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: goflow
+  name: goflow
+spec:
+  ports:
+  - port: 2056
+    protocol: UDP
+    targetPort: 2056
+  selector:
+    app: goflow
+  type: ClusterIP

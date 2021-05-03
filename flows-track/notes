@@ -1,0 +1,7 @@
+After removing the collectors, oc debug a node and run:
+
+`ovsdb-tool -mm show-log`
+
+There's evidence of a change to OVS, but my limited
+experience is that some records continue to pile up
+on the goflow collector.
