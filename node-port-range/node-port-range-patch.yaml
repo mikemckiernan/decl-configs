@@ -1,0 +1,2 @@
+spec:
+  serviceNodePortRange: "26500-32767"
