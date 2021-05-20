@@ -4,4 +4,3 @@ metadata:
   name: default
   namespace: openshift-sriov-network-operator
 spec:
-  enableInjector: true

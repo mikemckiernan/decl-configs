@@ -1,0 +1,7 @@
+resources:
+  - bases/sriov-config.yaml
+
+patchesStrategicMerge:
+  - enable-injector-patch.yaml
+  - enable-operator-webhook-patch.yaml
+  - config-daemon-node-selector-patch.yaml

@@ -4,4 +4,5 @@ metadata:
   name: default
   namespace: openshift-sriov-network-operator
 spec:
-  enableInjector: true
+  configDaemonNodeSelector:
+    doc-demo.role: worker
