@@ -1,5 +1,11 @@
 # SR-IOV
 
+Install the SR-IOV Network Operator:
+
+```bash
+oc apply -f install.yaml
+```
+
 ## Declaratively
 
 Apply the manifest:
@@ -81,7 +87,7 @@ apiVersion: v1
 kind: Node
 metadata:
   labels:
-    doc-demo.openshift.io/role: worker
+    doc-demo.role: worker
   name: worker-1.ci-ln-9sc6z7k-86010.origin-ci-int-aws.dev.rhcloud.com
 ```
 
