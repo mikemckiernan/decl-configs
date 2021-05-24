@@ -25,6 +25,37 @@ oc get svc -n openshift-operator-lifecycle-manager  packageserver-service -o jso
 ["192.168.2.33","192.168.2.34"]
 ```
 
+## Double-plus fun
+
+The following `oc apply` triggers the warning that is common.
+
+```bash
+k get svc -n openshift-operator-lifecycle-manager packageserver-service -o yaml > /tmp/x
+
+oc apply -n openshift-operator-lifecycle-manager -f packageserver-svc.yaml
+
+k get svc -n openshift-operator-lifecycle-manager packageserver-service -o yaml > /tmp/y
+
+diff /tmp/x /tmp/y
+```
+
+The difference meets expectations:
+
+```text
+3a4,6
+>   annotations:
+>     kubectl.kubernetes.io/last-applied-configuration: |
+>       {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"packageserver-service","namespace":"openshift-operator-lifecycle-manager"},"spec":{"externalIPs":["192.168.2.33","192.168.2.34"]}}
+14c17
+<   resourceVersion: "7758"
+---
+>   resourceVersion: "56647"
+19a23,25
+>   externalIPs:
+>   - 192.168.2.33
+>   - 192.168.2.34
+```
+
 ## Imperatively
 
 Patch the service:
