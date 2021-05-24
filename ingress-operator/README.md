@@ -1,4 +1,4 @@
-# Setting a custom default certificiate
+# Setting a custom default certificate
 
 ## Declaratively
 
