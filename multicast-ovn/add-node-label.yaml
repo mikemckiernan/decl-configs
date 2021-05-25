@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Node
+metadata:
+  labels:
+    doc-demo.role: worker
+    k8s.ovn.org/egress-assignable: ""
+  name: worker-0.mmckiern.lab.upshift.rdu2.redhat.com
+

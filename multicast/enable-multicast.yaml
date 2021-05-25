@@ -1,0 +1,6 @@
+apiVersion: network.openshift.io/v1
+kind: NetNamespace
+metadata:
+  name: mmckiern
+  annotations:
+    netnamespace.network.openshift.io/multicast-enabled: "true"
