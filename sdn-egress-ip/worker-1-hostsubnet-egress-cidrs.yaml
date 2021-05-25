@@ -1,0 +1,6 @@
+apiVersion: network.openshift.io/v1
+kind: HostSubnet
+metadata:
+  name: worker-1.sharedocp4upi47.lab.upshift.rdu2.redhat.com
+egressCIDRs:
+  - "192.168.1.0/24"

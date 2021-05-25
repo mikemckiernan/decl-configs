@@ -1,0 +1,8 @@
+---
+apiVersion: network.openshift.io/v1
+kind: NetNamespace
+metadata:
+  name: mmckiern
+  namespace: mmckiern
+netname: mmckiern
+egressIPs: [192.168.2.100, 192.168.2.101]

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: egress-routes
+data:
+  destination: |
+    # Egress routes for Project "Test", version 3                                                                                                                 
+
+    80   tcp 203.0.113.25                                                                                                                                         
+
+    8080 tcp 203.0.113.26 80
+    8443 tcp 203.0.113.26 443                                                                                                                                     
+
+    # Fallback
+    203.0.113.27 
