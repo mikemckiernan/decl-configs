@@ -1,0 +1,7 @@
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  labels:
+    custom-kubelet: small-pods
+  name: worker

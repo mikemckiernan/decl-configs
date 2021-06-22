@@ -1,0 +1,7 @@
+---
+kind: Node
+apiVersion: v1
+metadata:
+  name: ci-ln-j56fgx2-f76d1-2wds9-worker-c-xlp5r
+  labels:
+    e2e-az-name: e2e-az1

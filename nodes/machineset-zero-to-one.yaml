@@ -1,0 +1,7 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  name: ci-ln-j56fgx2-f76d1-2wds9-worker-b
+  namespace: openshift-machine-api
+spec:
+  replicas: 1

@@ -1,0 +1,10 @@
+---
+kind: Node
+apiVersion: v1
+metadata:
+  name: ci-ln-j56fgx2-f76d1-2wds9-worker-b-qdfv7
+spec:
+  taints:
+    - key: dedicated
+      value: groupName
+      effect: NoSchedule
