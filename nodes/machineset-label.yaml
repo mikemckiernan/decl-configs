@@ -4,4 +4,9 @@ metadata:
   name: ci-ln-l9ts6qk-d5d6b-xmcc9-worker-us-east-1b
   namespace: openshift-machine-api
 spec:
-  replicas: 1
+  template:
+    spec:
+      metadata:
+        labels:
+          type: "user-node"
+          region: "east"

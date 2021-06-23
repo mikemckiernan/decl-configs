@@ -2,6 +2,7 @@
 kind: Node
 apiVersion: v1
 metadata:
-  name: ci-ln-j56fgx2-f76d1-2wds9-worker-c-xlp5r
+  name: ip-10-0-208-126.ec2.internal
   labels:
+    unhealthy: 'true'
     e2e-az-name: e2e-az1

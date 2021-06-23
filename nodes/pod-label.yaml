@@ -1,0 +1,9 @@
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  labels:
+    foo: "bar"
+  namespace: openshift-ovn-kubernetes
+  name: "*"
+
