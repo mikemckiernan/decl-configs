@@ -1,0 +1,29 @@
+---
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      volumes:
+        - name: volume-pppsw
+          emptyDir: {}
+        - name: v1
+          secret:
+            secretName: doc-secret
+            defaultMode: 420
+      containers:
+        - image: nginx
+          name: nginx
+          volumeMounts:
+            - name: v1
+              mountPath: /docsecret
+            - name: volume-pppsw
+              mountPath: /empty

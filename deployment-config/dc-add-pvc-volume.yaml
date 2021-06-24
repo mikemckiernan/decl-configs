@@ -1,0 +1,30 @@
+---
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: registry
+  namespace: mmckiern
+spec:
+  replicas: 1
+  selector:
+    app: httpd
+  template:
+    metadata:
+      labels:
+        app: httpd
+    spec:
+      volumes:
+        - name: volume-pppsw
+          emptyDir: {}
+        - name: v1
+          persistentVolumeClaim:
+            claimName: gp2-claim
+      containers:
+        - name: httpd
+          image: image-registry.openshift-image-registry.svc:5000/openshift/httpd:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: v1
+              mountPath: /data

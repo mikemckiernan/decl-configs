@@ -1,0 +1,7 @@
+= modules/nodes-cluster-resource-levels-job.adoc
+
+We don't have an update for this one just yet.
+The `oc adm` command that is shown adds at
+least two secrets and we don't have that information.
+
+
