@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: special
+spec:
+  selector:
+    matchLabels:
+      run: special
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: special
+    spec:
+      containers:
+        - args:
+          - netexec
+          image: k8s.gcr.io/e2e-test-images/agnhost:2.32
+          name: agnhost
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      dnsConfig:
+        nameservers:
+          - 1.1.1.1
+        searches:
+          - resolv.conf.local
+      dnsPolicy: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: special
+spec:
+  selector:
+    app: special
+  ports:
+    - port: 8080
+  type: LoadBalancer
+  loadBalancerIP: 192.168.10.5

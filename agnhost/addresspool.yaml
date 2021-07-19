@@ -1,0 +1,24 @@
+---
+apiVersion: metallb.io/v1alpha1
+kind: AddressPool
+metadata:
+  namespace: metallb-system
+  name: pool-default
+spec:
+ name: default
+ protocol: layer2
+ addresses:
+ - 172.18.255.200-172.18.255.250
+---
+apiVersion: metallb.io/v1alpha1
+kind: AddressPool
+metadata:
+  namespace: metallb-system
+  name: pool-gold
+spec:
+ name: gold
+ protocol: layer2
+ addresses:
+ - 192.168.10.1/32
+ - 192.168.10.5/32
+ autoAssign: false
