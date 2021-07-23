@@ -5,7 +5,9 @@ metadata:
   name: test-agnhost
 spec:
   selector:
-    app: test-agnhost
+    run: test-agnhost
   ports:
-    - port: 8080
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
   type: LoadBalancer

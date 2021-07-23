@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-agnhost
+spec:
+  type: NodePort
+  ports:
+  - nodePort: 30950
+    port: 8080
+    protocol: TCP                                                                                                                                                                      
+    targetPort: 8080
+  selector:
+    run: test-agnhost
