@@ -119,3 +119,20 @@ k get svc test-agnhost
 NAME           TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)        AGE
 test-agnhost   LoadBalancer   172.30.124.152   172.18.255.200   80:30138/TCP   3h26m
 ```
+
+## View the pods that use a config map as a volume
+
+```bash
+k get po -n openshift-ovn-kubernetes \
+  -o jsonpath="{range .items[?(@.spec.volumes[*].configMap)]}{.metadata.namespace}  {.metadata.name}{'\n'}{'Volumes:\n'}{range .spec.volumes[?(@.configMap)]}  {.name}{'\n'}{end}{'\n\n'}{end}"
+```
+
+Partial output from the preceding command:
+
+```text
+openshift-ovn-kubernetes  ovnkube-node-xcdrq
+Volumes:
+  ovnkube-config
+  env-overrides
+  ovn-ca
+```
