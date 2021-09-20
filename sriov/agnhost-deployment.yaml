@@ -1,0 +1,33 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-agnhost
+spec:
+  selector:
+    matchLabels:
+      run: test-agnhost
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: test-agnhost
+      annotations:
+        k8s.v1.cni.cncf.io/networks: attach1
+    spec:
+      containers:
+        - args:
+          - netexec
+          image: k8s.gcr.io/e2e-test-images/agnhost:2.32
+          name: agnhost
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      dnsConfig:
+        nameservers:
+          - 1.1.1.1
+        searches:
+          - resolv.conf.local
+      dnsPolicy: None
+      nodeSelector:
+        feature.node.kubernetes.io/network-sriov.capable: "true"
