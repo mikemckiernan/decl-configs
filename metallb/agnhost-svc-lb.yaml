@@ -4,8 +4,9 @@ kind: Service
 metadata:
   name: test-agnhost
   annotations:
-    metallb.universe.tf/address-pool: gold
+    metallb.universe.tf/address-pool: doc-example-bgp-adv
 spec:
+  ipFamilyPolicy: RequireDualStack
   selector:
     run: test-agnhost
   ports:

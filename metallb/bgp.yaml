@@ -1,0 +1,14 @@
+---
+apiVersion: metallb.io/v1beta1
+kind: BGPPeer
+metadata:
+  namespace: metallb-system
+  name: doc-example-peer
+spec:
+  peerAddress: 172.19.0.3
+  peerASN: 64500
+  myASN: 64500
+  holdTime: "15s"
+  keepaliveTime: "10s"
+  routerID: 172.18.0.2
+  bfdProfile: doc-example-bfd-profile-full
