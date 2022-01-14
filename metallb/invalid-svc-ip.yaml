@@ -4,6 +4,7 @@ kind: Service
 metadata:
   name: invalid-request
 spec:
+  ipFamilyPolicy: RequireDualStack
   selector:
     run: test-agnhost
   ports:
@@ -11,4 +12,5 @@ spec:
       targetPort: 8080
       protocol: TCP
   type: LoadBalancer
-  loadBalancerIP: 4.3.2.1
+  #loadBalancerIP: 4.3.2.1
+  loadBalancerIP: 203.0.113.203

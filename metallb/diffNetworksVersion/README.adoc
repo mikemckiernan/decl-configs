@@ -1,0 +1,464 @@
+= MetalLB setup for doc with kind
+
+First, everything in this `diffNetworksVersion` directory is a hack on the work
+done by Lior Noy in <https://github.com/liornoy/static-routes-with-bfd>.
+
+I modified the content so that the scripts and configuration files can
+work for a BGP protocol deployment of MetalLB and retain the BFD
+ability that Lior originally intended the work to provide.
+
+The network topology that Lior drew is available from 
+<https://user-images.githubusercontent.com/40122521/136552206-a8b42573-17c8-42ba-9750-0cd9cc61cbea.png>
+
+== Requirements
+
+Install make. Hopefully, there's a package for your OS.
+
+Install Docker, <https://docs.docker.com/get-docker/>.
+
+Install Golang, <https://go.dev/dl/>.  I have version 1.17.6.
+
+After installing Golang, use Go to install kind. According to <https://kind.sigs.k8s.io/>,
+you should be able to run the foll command to install:
+
+[source,terminal]
+----
+go install sigs.k8s.io/kind@v0.11.1
+----
+
+Clone the <https://github.com/metallb/metallb-operator> repository.
+
+== Create a mock network topology for MetalLB
+
+. Run the `./setup.sh` script.
++
+.Success response
+[terminal,text]
+----
+f125f2fce973a8691eb21aac5964ea8e75656c1f7ebfe9162098f0f3e72d454a
+Creating cluster "kind" ...
+ ✓ Ensuring node image (kindest/node:v1.21.1) 🖼
+ ✓ Preparing nodes 📦 📦 📦
+ ✓ Writing configuration 📜
+ ✓ Starting control-plane 🕹️
+ ✓ Installing CNI 🔌
+ ✓ Installing StorageClass 💾
+ ✓ Joining worker nodes 🚜
+Set kubectl context to "kind-kind"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-kind
+
+Have a nice day! 👋
+Creating second docker network kind2
+2b225c0f92defdaaed53c41b30413fbe6f58dceaa1a6dcb25397b0287570f786
+Creating frr containers
+643afb693b17415b096387a6bef99db50d0ba070db7cf8cfe228e305e47680aa
+ce9a1bfa0359b7392a466d4147d57358b547017bd88b6ef975499e7978b56123
+bf3d626dda5e1c0e67708826f49d4fdc0f007e816d7728f342164d363c8e45db
+Editing configurations files
+Configuring static routes
+----
++
+If you receive additional messages that are related to
+downloading the `kindest` container image, that's fine
++
+On subsequent runs, the first line, `f125...`, is replaced
+with `Error response from daemon: network with name kind already exists`.
+You can ignore the message.
+
+. For fun, check that you have a connection to the three nodes:
++
+[source,terminal]
+----
+oc get nodes
+----
++
+.Success response
+[source,text]
+----
+NAME                 STATUS   ROLES                  AGE   VERSION
+kind-control-plane   Ready    control-plane,master   49s   v1.21.1
+kind-worker          Ready    <none>                 23s   v1.21.1
+kind-worker2         Ready    <none>                 22s   v1.21.1
+----
+
+. For more fun, check that you have the correct number of containers running:
++
+[source,terminal]
+----
+docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.Networks}}'
+----
++
+.Success response
+[source,text]
+----
+CONTAINER ID   NAMES                NETWORKS
+dd7bfa176493   frr2                 kind2
+412c1043a827   frr1                 kind2
+ac5cf3e16e54   next-hop-router      kind,kind2
+059956ac556a   kind-control-plane   kind
+a356e52d06d4   kind-worker          kind
+bdb7013aa32d   kind-worker2         kind
+----
++
+The key consideration is that you have two `frr` containers, one `next-hop-router`,
+and the three containers for kind.
+
+== Deploy the MetalLB Operator
+
+As long as your shell has access to a Kubernetes cluster, the scripts
+put together by the engineering team can deploy the MetalLB Operator.
+
+There are only two commands.
+I snagged them from the `Deploy Metal LB Operator` stage of the
+`.github/workflows/metallb_e2e.yml` file.
+
+. Change directory to the `metallb-operator` repository
+that you cloned.
+
+. Deploy cert manager:
++
+[source,terminal]
+----
+make deploy-cert-manager
+----
++
+Lots of text scrolls by as tools and container images are downloaded
+and manifests are applied to the cluster.
++
+There's a disconcerting message like `waiting for cert-manager to be ready attempt:2
+Error from server (InternalError):` after a while.
+It's a loop that checks whether cert manager is deployed and running.
+Leave it alone.
+It usually deploys around the eighth attempt.
+
+. Add the `metallb-system` namespace:
++
+[source,terminal]
+----
+oc create ns metallb-system
+----
++
+I have no idea why this is necessary, but the next step
+creates a `metallb-operator-system` namespace instead and then
+the manifests fail to apply.
+
+. Deploy the Operator:
++
+[source,terminal]
+----
+KUSTOMIZE_DEPLOY_DIR="config/frr-on-ci/" ENABLE_OPERATOR_WEBHOOK="true" make deploy
+----
++
+Like the previous `make` command, several tools and container images are downloaded
+and then manifests are applied.
++
+.Success response
+[source,text]
+----
+...
+rolebinding.rbac.authorization.k8s.io/speaker created
+clusterrolebinding.rbac.authorization.k8s.io/metallb-system:controller created
+clusterrolebinding.rbac.authorization.k8s.io/metallb-system:speaker created
+----
+
+. Let the troubleshooting begin:
++
+[source,terminal]
+----
+oc get all -n metallb-system
+----
++
+.Expected response
+[source,text]
+----
+NAME                                                       READY   STATUS              RESTARTS   AGE
+pod/metallb-operator-controller-manager-857f69d598-wsmxn   0/1     ErrImageNeverPull   0          81s
+
+NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/webhook-service   ClusterIP   172.30.58.181   <none>        443/TCP   81s
+
+NAME                                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/metallb-operator-controller-manager   0/1     1            0           81s
+
+NAME                                                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/metallb-operator-controller-manager-857f69d598   1         1         0       81s
+----
+
+. Remediate the `ErrImageNeverPull` message by manually editting the
+deployment for the controller:
++
+[source,terminal]
+----
+oc edit -n metallb-system deployment/metallb-operator-controller-manager
+----
++
+After your editor opens, change the image pull policy from `Never` to `Always`:
++
+[source,yaml]
+----
+ 64               fieldPath: metadata.namespace
+ 65         image: quay.io/metallb/metallb-operator:latest
+ 66         imagePullPolicy: Always   <-- This is the line to change.
+ 67         name: manager
+ 68         ports:
+----
++
+Save and close the file.
+After about 30 seconds, an `oc get all -n metallb-system` should show
+that the `metallb-operator-controller-manager` pod is `Running`.
+
+== Start and configure MetalLB
+
+. Change directory to the `decl-configs/metallb` directory.
+
+. Start MetallB by adding an instance of the `MetalLB` custom resource:
++
+[source,terminal]
+----
+oc apply -f metallb-instance.yaml
+----
++
+.Success response
+----
+metallb.metallb.io/metallb created
+----
+
+. Check the progress:
++
+[source,terminal]
+----
+k get pods -n metallb-system
+----
++
+.Expected response
+[source,text]
+----
+NAME                                                       READY   STATUS              RESTARTS   AGE
+pod/controller-75f7474559-kjht5                            0/1     ContainerCreating   0          102s
+pod/metallb-operator-controller-manager-5c758bc6dc-rldtr   1/1     Running             0          4m26s
+pod/speaker-5v7cf                                          0/4     Init:0/3            0          102s
+pod/speaker-pgq4m                                          0/4     Init:0/3            0          102s
+pod/speaker-wvtkr                                          0/4     Init:0/3            0          102s
+----
++
+The key consideration is that you have one `controller` pod and three `speaker` pods starting.
+Wait a minute or so for the container images to download and start.
+
+. Configure an address pool that uses BGP:
++
+[source,terminal]
+----
+oc apply -f addresspool-bgp.yaml
+----
++
+.Success response
+[source,text]
+----
+addresspool.metallb.io/doc-example-bgp-adv created
+----
+
+. Configure BGP peers:
++
+[source,terminal]
+----
+oc apply -f bgp.yaml
+----
++
+.Success response
+[source,text]
+----
+bgppeer.metallb.io/doc-example-peer created
+bgppeer.metallb.io/doc-example-peer-dot-four created
+----
+
+. Configure the BFD profile that the BGP peers use:
++
+[source,terminal]
+----
+oc apply -f bfdprofile.yaml
+----
++
+.Success response
+[source,text]
+----
+bfdprofile.metallb.io/doc-example-bfd-profile-full created
+----
+
+. Configure a silly application deployment:
++
+[source,terminal]
+----
+oc apply -f agnhost-deployment.yaml 
+----
++
+.Success response
+[source,text]
+----
+deployment.apps/test-agnhost created
+----
+
+. Configure a load balancer service for the application:
++
+[source,terminal]
+----
+oc apply -f agnhost-svc-lb.yaml
+----
++
+.Success response
+[source,text]
+----
+service/test-agnhost created
+----
++
+The application and service are deployed in the `default` namespace.
+
+. Confirm that MetalLB assigned a load balancer IP address for the service:
++
+[source,terminal]
+----
+oc get svc -n default
+----
++
+.Success response
+[source,text]
+----
+NAME           TYPE           CLUSTER-IP      EXTERNAL-IP            PORT(S)        AGE
+kubernetes     ClusterIP      172.30.0.1      <none>                 443/TCP        57m
+test-agnhost   LoadBalancer   172.30.191.21   203.0.113.200,fd01::   80:32109/TCP   38s
+----
++
+The `203.0.113.200,fd01::` value indicates the load balancer IP address that
+MetalLB assigned.
+
+== Confirm that MetalLB uses BGP to advertise the load balancer IP address
+
+The following steps are identical or similar to the troubleshooting steps
+in the product doc.
+
+. Display the `speaker` pods:
++
+[source,terminal]
+----
+oc get po -n metallb-system -l app.kubernetes.io/component=speaker
+----
++
+.Success response
+[source,text]
+----
+NAME            READY   STATUS    RESTARTS   AGE
+speaker-5v7cf   4/4     Running   0          43m
+speaker-pgq4m   4/4     Running   0          43m
+speaker-wvtkr   4/4     Running   0          43
+----
++
+Pick one of the `speaker` pod names to use for verification.
+
+. Confirm that FRR is aware of the load balancer IP address:
++
+[source,terminal]
+----
+oc exec -it -n metallb-system speaker-5v7cf -c frr -- vtysh -c "sh ip bgp"
+----
++
+.Maybe ok response
+[source,text]
+----
+BGP table version is 2, local router ID is 10.128.2.1, vrf id 0
+Default local pref 100, local AS 64500
+Status codes:  s suppressed, d damped, h history, * valid, > best, = multipath,
+               i internal, r RIB-failure, S Stale, R Removed
+Nexthop codes: @NNN nexthop's vrf id, < announce-nh-self
+Origin codes:  i - IGP, e - EGP, ? - incomplete
+
+   Network          Next Hop            Metric LocPrf Weight Path
+*> 203.0.113.200/30 0.0.0.0                  0         32768 i
+*> 203.0.113.200/32 0.0.0.0                  0         32768 i
+----
+
+. Display the 
++
+[source,terminal]
+----
+oc exec -it -n metallb-system speaker-5v7cf -c frr -- vtysh -c "sh bgp ipv4 summary"
+----
++
+.Success response
+[source,text]
+----
+IPv4 Unicast Summary:
+BGP router identifier 10.128.2.1, local AS number 64500 vrf-id 0
+BGP table version 2
+RIB entries 2, using 384 bytes of memory
+Peers 2, using 29 KiB of memory
+
+Neighbor        V         AS   MsgRcvd   MsgSent   TblVer  InQ OutQ  Up/Down State/PfxRcd   PfxSnt
+10.0.2.3        4      64500         7        21        0    0    0    never      Connect        0
+10.0.2.4        4      64500         8        24        0    0    0    never      Connect        0
+
+Total number of neighbors 2
+----
++
+Because the number of messages received and sent is greater than `0`, this is OK.
+The `0` for prefixes sent is worrisome though.
+
+////
+# FRR BFD Session
+
+This version of the setup simulate a BFD connection between a Kubernetes cluster nodes to data center gateways that are more than one hop away. 
+
+![diffNetVersion](https://user-images.githubusercontent.com/40122521/136552206-a8b42573-17c8-42ba-9750-0cd9cc61cbea.png)
+
+The setup.sh script takes care of all the setup needed. the steps it makes are:
+1. Create a kind cluster with two worker nodes
+2. Create a docker sub-network called kind2
+3. Create the middle linux container and connect it to both networks
+4. Create two frr containers
+5. Edit configurations files
+6. Create configmap
+7. Apply the FRR daemonset
+8. Reload the FRR containers to apply the configurations
+9. Add static routes
+
+### Verify the BFD session is up
+To verify that the BFD session is up, enter one of the containers:
+
+`docker exec -it frr1 sh`
+
+Enter to the vtysh (FRR's shell) and inspect the bfd peers:
+
+```
+vtysh
+show bfd peers brief
+```
+
+Output should look like this:
+```
+Session count: 2
+SessionId  LocalAddress                             PeerAddress                             Status         
+=========  ============                             ===========                             ======         
+4161101689 172.19.0.3                               172.18.0.2                              up             
+1130635521 172.19.0.3                               172.18.0.3                              up 
+```
+
+### Simulate a failover
+
+To simulate a failover we'll delete one of the worker nodes:
+
+
+`kubectl delete node kind-worker`
+
+Then watch the BFD status from the container again:
+```
+Session count: 2
+SessionId  LocalAddress                             PeerAddress                             Status         
+=========  ============                             ===========                             ======         
+4161101689 172.19.0.3                               172.18.0.2                              up             
+1130635521 172.19.0.3                               172.18.0.3                              down 
+```
+////
+
+== Cleanup
+Use the `./cleanup.sh` script to delete the environment
+

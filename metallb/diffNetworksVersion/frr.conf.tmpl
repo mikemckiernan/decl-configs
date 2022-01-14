@@ -1,0 +1,15 @@
+router bgp 64500
+ bgp router-id LOCAL_IP
+ neighbor IP_A remote-as 64500
+ neighbor IP_A ebgp-multihop 255
+ neighbor IP_B remote-as 64500
+ neighbor IP_B ebgp-multihop 255
+!
+bfd
+ peer IP_A multihop local-address LOCAL_IP
+   no shutdown
+ !
+ peer IP_B multihop local-address LOCAL_IP
+   no shutdown
+ !
+!

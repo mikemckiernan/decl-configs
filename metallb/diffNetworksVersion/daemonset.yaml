@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: frr-daemonset
+  namespace: default
+  labels:
+    app: frr-daemonset
+spec:
+  selector:
+    matchLabels:
+      name: frr-daemonset
+  template:
+    metadata: 
+      labels:
+        app: frr
+        name: frr-daemonset
+    spec:
+      hostNetwork: true
+      volumes:
+        - name: frr-config
+          configMap:
+            name: frr-config
+      containers:
+      - name: frr-daemonset
+        image: docker.io/frrouting/frr
+        volumeMounts:
+        - mountPath: "/tmp/configmap/"
+          name: frr-config
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN","NET_RAW","SYS_ADMIN"]
+        command: ["sh", "-c", " cp /tmp/configmap/daemons /tmp/configmap/vtysh.conf /tmp/configmap/frr.conf /etc/frr  &&  sed -i 's/LOCAL_IP/'$LOCAL_IP'/g' /etc/frr/frr.conf && echo $LOCAL_IP \
+                  && /usr/lib/frr/docker-start"]
+        env:
+          - name: LOCAL_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP

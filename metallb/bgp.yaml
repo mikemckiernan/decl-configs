@@ -5,10 +5,25 @@ metadata:
   namespace: metallb-system
   name: doc-example-peer
 spec:
-  peerAddress: 172.19.0.3
+  peerAddress: 10.0.2.3
   peerASN: 64500
   myASN: 64500
   holdTime: "15s"
   keepaliveTime: "10s"
-  routerID: 172.18.0.2
+  # routerID: 10.0.1.2
   bfdProfile: doc-example-bfd-profile-full
+---
+apiVersion: metallb.io/v1beta1
+kind: BGPPeer
+metadata:
+  namespace: metallb-system
+  name: doc-example-peer-dot-four
+spec:
+  peerAddress: 10.0.2.4
+  peerASN: 64500
+  myASN: 64500
+  holdTime: "15s"
+  keepaliveTime: "10s"
+  # routerID: 10.0.1.2
+  bfdProfile: doc-example-bfd-profile-full
+

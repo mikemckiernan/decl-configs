@@ -7,11 +7,14 @@ metadata:
 spec:
   protocol: bgp
   addresses:
-    - 192.168.1.0/24
-    - fc00:f853:0ccd:e799::/124
-#  bgpAdvertisements:
-#  - communities:
-#    - 65535:65282
+    - 203.0.113.200/30
+    - fd01::/124
   bgpAdvertisements:
-  - aggregationLength: 24
+  - communities:
+    - 65535:65282
+    aggregationLength: 32
+    localPref: 100
+  - communities:
+    - 8000:800
+    aggregationLength: 30
     aggregationLengthV6: 124
