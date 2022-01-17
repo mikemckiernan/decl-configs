@@ -507,6 +507,7 @@ docker exec -it frr1 ash
 ----
 
 . Add the `curl` package:
++
 [source,terminal]
 ----
 apk add curl
