@@ -10,11 +10,11 @@ spec:
     - 203.0.113.200/30
     - fd01::/124
   bgpAdvertisements:
-  - communities:
-    - 65535:65282
-    aggregationLength: 32
-    localPref: 100
-  - communities:
-    - 8000:800
-    aggregationLength: 30
-    aggregationLengthV6: 124
+    #- communities:
+    #- 65535:65282
+    #aggregationLength: 32
+    #localPref: 100
+    #  - communities:
+    #- 8000:800
+    #aggregationLength: 30
+    #aggregationLengthV6: 124

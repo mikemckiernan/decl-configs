@@ -94,24 +94,25 @@ docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.Networks}}'
 [source,text]
 ----
 CONTAINER ID   NAMES                NETWORKS
-dd7bfa176493   frr2                 kind2
-412c1043a827   frr1                 kind2
-ac5cf3e16e54   next-hop-router      kind,kind2
-059956ac556a   kind-control-plane   kind
-a356e52d06d4   kind-worker          kind
-bdb7013aa32d   kind-worker2         kind
+xxxxxxxxxxxx   frr2                 kind2
+xxxxxxxxxxxx   frr1                 kind2
+xxxxxxxxxxxx   next-hop-router      kind,kind2
+xxxxxxxxxxxx   kind-control-plane   kind
+xxxxxxxxxxxx   kind-worker          kind
+xxxxxxxxxxxx   kind-worker2         kind
 ----
 +
 The key consideration is that you have two `frr` containers, one `next-hop-router`,
 and the three containers for kind.
+It is also important that the `next-hop-router` container is connected to
+two Docker networks.
 
 == Deploy the MetalLB Operator
 
 As long as your shell has access to a Kubernetes cluster, the scripts
 put together by the engineering team can deploy the MetalLB Operator.
 
-There are only two commands.
-I snagged them from the `Deploy Metal LB Operator` stage of the
+The following steps are based on the `Deploy Metal LB Operator` stage of the
 `.github/workflows/metallb_e2e.yml` file.
 
 . Change directory to the `metallb-operator` repository
@@ -131,7 +132,18 @@ There's a disconcerting message like `waiting for cert-manager to be ready attem
 Error from server (InternalError):` after a while.
 It's a loop that checks whether cert manager is deployed and running.
 Leave it alone.
-It usually deploys around the eighth attempt.
+It usually deploys around the eighth attempt and the success response
+looks like the following:
++
+.Success response
+[source,text]
+----
+...
+waiting for cert-manager to be ready attempt:8
+issuer.cert-manager.io/selfsigned-issuer-test created
+cert-manager is ready
+issuer.cert-manager.io "selfsigned-issuer-test" deleted
+----
 
 . Add the `metallb-system` namespace:
 +
@@ -140,9 +152,10 @@ It usually deploys around the eighth attempt.
 oc create ns metallb-system
 ----
 +
-I have no idea why this is necessary, but the next step
-creates a `metallb-operator-system` namespace instead and then
-the manifests fail to apply.
+I have no idea why it is necessary to add the namespace manually,
+but the next step creates a `metallb-operator-system` namespace
+instead and then the manifests fail to apply unless the `metallb-system`
+namespace is added manually.
 
 . Deploy the Operator:
 +
@@ -207,7 +220,7 @@ After your editor opens, change the image pull policy from `Never` to `Always`:
 +
 Save and close the file.
 After about 30 seconds, an `oc get all -n metallb-system` should show
-that the `metallb-operator-controller-manager` pod is `Running`.
+a status of `Running` for the  `metallb-operator-controller-manager` pod.
 
 == Start and configure MetalLB
 
@@ -229,7 +242,7 @@ metallb.metallb.io/metallb created
 +
 [source,terminal]
 ----
-k get pods -n metallb-system
+oc get pods -n metallb-system
 ----
 +
 .Expected response
@@ -332,6 +345,38 @@ test-agnhost   LoadBalancer   172.30.191.21   203.0.113.200,fd01::   80:32109/TC
 The `203.0.113.200,fd01::` value indicates the load balancer IP address that
 MetalLB assigned.
 
+. Optional: If you want to confirm that the `agnhost` service is running, perform
+the following steps:
+
+.. Make a note of the node port from the output of the `oc get svc -n default` command.
+In the success response, the node port is `32109`.
+
+.. Determine the IP address of `kind-worker`:
++
+[source,terminal]
+----
+docker inspect kind-worker -f "{{.NetworkSettings.Networks.kind.IPAddress}}"
+----
++
+.Example output
+[source,text]
+----
+10.0.1.3
+----
+
+.. Access the node port for the service from the IP address of `kind-worker`:
++
+[source,terminal]
+----
+curl http://10.0.1.3:32109
+----
++
+.Example output
+[source,text]
+----
+NOW: 2022-01-17 13:56:13.351767242 +0000 UTC m=+191.772109100
+----
+
 == Confirm that MetalLB uses BGP to advertise the load balancer IP address
 
 The following steps are identical or similar to the troubleshooting steps
@@ -373,7 +418,6 @@ Nexthop codes: @NNN nexthop's vrf id, < announce-nh-self
 Origin codes:  i - IGP, e - EGP, ? - incomplete
 
    Network          Next Hop            Metric LocPrf Weight Path
-*> 203.0.113.200/30 0.0.0.0                  0         32768 i
 *> 203.0.113.200/32 0.0.0.0                  0         32768 i
 ----
 
@@ -394,14 +438,15 @@ RIB entries 2, using 384 bytes of memory
 Peers 2, using 29 KiB of memory
 
 Neighbor        V         AS   MsgRcvd   MsgSent   TblVer  InQ OutQ  Up/Down State/PfxRcd   PfxSnt
-10.0.2.3        4      64500         7        21        0    0    0    never      Connect        0
-10.0.2.4        4      64500         8        24        0    0    0    never      Connect        0
+10.0.2.3        4      64500       130       133        0    0    0 00:10:37            0        1
+10.0.2.4        4      64500       130       133        0    0    0 00:10:37            0        1
 
 Total number of neighbors 2
 ----
 +
 Because the number of messages received and sent is greater than `0`, this is OK.
-The `0` for prefixes sent is worrisome though.
+The `1` for prefixes sent indicates that the single `203.0.113.200/32` load balancer
+IP address is advertised to the two BGP peers, `frr1` and `frr2`.
 
 ////
 # FRR BFD Session
