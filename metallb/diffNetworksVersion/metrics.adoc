@@ -1,0 +1,107 @@
+= Metrics
+
+For the 4.10 release, some metrics are scraped from FRR in the `speaker` pods
+and are made available to Prometheus.
+
+. Get the names of the `speaker` pods:
++
+[source,terminal]
+----
+oc get po -n metallb-system -l app.kubernetes.io/component=speaker
+----
++
+.Example output
+[source,text]
+----
+NAME            READY   STATUS    RESTARTS   AGE
+speaker-9h9sx   4/4     Running   0          127m
+speaker-nvw7w   4/4     Running   0          127m
+speaker-prhwt   4/4     Running   0          127m
+----
+
+. Pick one of the pods and add `curl` to the `frr-metrics` container:
++
+[source,terminal]
+----
+oc exec -it -n metallb-system speaker-nvw7w -c frr-metrics -- apk add curl
+----
++
+.Example output
+[source,text]
+----
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.14/main/x86_64/APKINDEX.tar.gz
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.14/community/x86_64/APKINDEX.tar.gz
+(1/5) Installing ca-certificates (20191127-r5)
+(2/5) Installing brotli-libs (1.0.9-r5)
+(3/5) Installing nghttp2-libs (1.43.0-r0)
+(4/5) Installing libcurl (7.79.1-r0)
+(5/5) Installing curl (7.79.1-r0)
+Executing busybox-1.33.1-r3.trigger
+Executing ca-certificates-20191127-r5.trigger
+OK: 112 MiB in 53 packages
+----
+
+. Run `curl` inside the `frr-metrics` pod to scrape the metrics:
++
+[source,terminal]
+----
+oc exec -it -n metallb-system speaker-9h9sx -c frr-metrics -- \
+  curl http://localhost:7473/metrics > /tmp/metrics.txt
+----
+
+. Display the metric names:
++
+[source,terminal]
+----
+grep "^# HELP" /tmp/metrics.txt | awk '{print $3}'
+----
++
+.Example output
+----
+go_gc_duration_seconds
+go_goroutines
+go_info
+go_memstats_alloc_bytes
+go_memstats_alloc_bytes_total
+go_memstats_buck_hash_sys_bytes
+go_memstats_frees_total
+go_memstats_gc_cpu_fraction
+go_memstats_gc_sys_bytes
+go_memstats_heap_alloc_bytes
+go_memstats_heap_idle_bytes
+go_memstats_heap_inuse_bytes
+go_memstats_heap_objects
+go_memstats_heap_released_bytes
+go_memstats_heap_sys_bytes
+go_memstats_last_gc_time_seconds
+go_memstats_lookups_total
+go_memstats_mallocs_total
+go_memstats_mcache_inuse_bytes
+go_memstats_mcache_sys_bytes
+go_memstats_mspan_inuse_bytes
+go_memstats_mspan_sys_bytes
+go_threads
+metallb_bfd_control_packet_input
+metallb_bfd_control_packet_output
+metallb_bfd_echo_packet_input
+metallb_bfd_echo_packet_output
+metallb_bfd_session_down_events
+metallb_bfd_session_up
+metallb_bfd_session_up_events
+metallb_bfd_zebra_notifications
+metallb_bgp_announced_prefixes_total
+metallb_bgp_session_up
+metallb_bgp_updates_total
+process_cpu_seconds_total
+process_max_fds
+process_open_fds
+process_resident_memory_bytes
+process_start_time_seconds
+process_virtual_memory_bytes
+process_virtual_memory_max_bytes
+promhttp_metric_handler_errors_total
+----
++
+I'm inclined to believe that only the metrics with `metallb`
+in the name are of particular interest to customers.
+
