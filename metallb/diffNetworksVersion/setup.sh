@@ -9,7 +9,7 @@ echo "Creating second docker network kind2"
 docker network create --driver=bridge kind2 --ipv6 --subnet=10.0.2.0/24 --gateway=10.0.2.1 --subnet=fd00:2::/64 --gateway=fd00:2::1 --opt com.docker.network.bridge.enable_ip_masquerade=true
 
 echo "Creating frr containers"
-docker run --network kind2 -d -it --rm --name next-hop-router  alpine
+docker run --cap-add NET_ADMIN --network kind2 -d -it --rm --name next-hop-router  alpine
 docker network connect kind next-hop-router 
 
 docker run --network kind2 -d --rm --name frr1 --privileged -v "$(pwd)/frr1":/etc/frr frrouting/frr

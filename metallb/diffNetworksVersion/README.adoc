@@ -400,14 +400,15 @@ speaker-wvtkr   4/4     Running   0          43
 +
 Pick one of the `speaker` pod names to use for verification.
 
-. Confirm that FRR is aware of the load balancer IP address:
+. Confirm that FRR is aware of the load balancer IP address by
+displaying the IP addresses that are advertised to BGP peers:
 +
 [source,terminal]
 ----
 oc exec -it -n metallb-system speaker-5v7cf -c frr -- vtysh -c "sh ip bgp"
 ----
 +
-.Maybe ok response
+.Success response
 [source,text]
 ----
 BGP table version is 2, local router ID is 10.128.2.1, vrf id 0
@@ -421,7 +422,8 @@ Origin codes:  i - IGP, e - EGP, ? - incomplete
 *> 203.0.113.200/32 0.0.0.0                  0         32768 i
 ----
 
-. Display the 
+. Display the BGP summary to confirm that the FRR containers from
+the `speaker` pods are communicating with the BGP peers:
 +
 [source,terminal]
 ----
@@ -447,6 +449,155 @@ Total number of neighbors 2
 Because the number of messages received and sent is greater than `0`, this is OK.
 The `1` for prefixes sent indicates that the single `203.0.113.200/32` load balancer
 IP address is advertised to the two BGP peers, `frr1` and `frr2`.
+
+. Confirm that one of the BGP peers, `frr1`, received the advertised load balancer
+IP address:
++
+[source,terminal]
+----
+docker exec -it frr1 vtysh -c "sh ip bgp"
+----
++
+.Success response
+[source,text]
+----
+BGP table version is 1, local router ID is 10.0.2.3, vrf id 0
+Default local pref 100, local AS 64500
+Status codes:  s suppressed, d damped, h history, * valid, > best, = multipath,
+               i internal, r RIB-failure, S Stale, R Removed
+Nexthop codes: @NNN nexthop's vrf id, < announce-nh-self
+Origin codes:  i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+   Network          Next Hop            Metric LocPrf Weight Path
+*=i203.0.113.200/32 10.0.1.3                 0    100      0 i
+*>i                 10.0.1.2                 0    100      0 i
+----
++
+The preceding output indicates that `frr1` received the load balancer
+IP address, `203.0.113.200`, and that `next-hop-router` (`10.0.1.3`)
+is where `frr1` routes packets for the load balancer IP address.
+
+== Good news and bad news
+
+The good news is that BGP is configured and the load balancer IP address
+is advertised to the BGP peers, `frr1` and `frr2`.
+
+The bad news is that because neither BGP peer is on the same layer 2
+network segment as the `speaker` pods, some action must be taken by
+the customer to ensure that routing is configured between the BGP
+peers and the `speaker` pods.
+
+=== Confirm that the frr1 container cannot reach the load balancer IP address
+
+The following steps are optional and solely meant to demonstrate that
+the advertised load balancer IP address is not accessible to the `frr` container.
+
+. Log in to the `frr1` container:
++
+[source,terminal]
+----
+docker exec -it frr1 ash
+----
++
+.Success response
+[source,text]
+----
+/ #
+----
+
+. Add the `curl` package:
+[source,terminal]
+----
+apk add curl
+----
++
+.Success response
+[source,text]
+----
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.13/main/x86_64/APKINDEX.tar.gz
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.13/community/x86_64/APKINDEX.tar.gz
+(1/5) Installing ca-certificates (20191127-r5)
+(2/5) Installing brotli-libs (1.0.9-r3)
+(3/5) Installing nghttp2-libs (1.42.0-r1)
+(4/5) Installing libcurl (7.79.1-r0)
+(5/5) Installing curl (7.79.1-r0)
+Executing busybox-1.32.1-r6.trigger
+Executing ca-certificates-20191127-r5.trigger
+OK: 135 MiB in 60 packages
+----
+
+. Attempt to access the service by using the load balancer IP address,
+with a timeout of `5` seconds:
++
+[source,terminal]
+----
+curl --connect-timeout 5 http://203.0.113.200
+----
++
+.Error response
+[source,text]
+----
+curl: (28) Connection timeout after 5001 ms
+----
+
+. Log out of the `frr1` container:
++
+[source,terminal]
+----
+exit
+----
+
+=== Add a static route to the next-hop-router for the load balancer IP address
+
+FIXME, I'm failing my own IQ test.
+I cannot determine why the following steps do not result in connectivity between
+`curl` from the `frr1` container and the load balancer IP address.
+
+. Log on to the `next-hop-router` container:
++
+[source,terminal]
+----
+docker exec -it next-hop-router ash
+----
++
+.Success response
+[source,text]
+----
+/ #
+----
+
+. Add a static route for the load balancer IP address:
++
+[source,terminal]
+----
+ip route add 203.0.113.200/32 via 10.0.1.5 dev eth1
+----
++
+On success, there is no response from the `ip` command.
+
+. As a troubleshooting step, display the kernel routing table:
++
+[source,terminal]
+----
+ip r
+----
++
+.Example output
+[source,text]
+----
+default via 10.0.1.1 dev eth1
+10.0.1.0/24 dev eth1 scope link  src 10.0.1.5
+10.0.2.0/24 dev eth0 scope link  src 10.0.2.2
+203.0.113.200 via 10.0.1.5 dev eth1
+----
++
+Here's the problem.
+I should be able to repeat the `curl` command from the
+"Confirm that the frr1 container..." section, but this time,
+the `curl` should succeed.
+I'm stumped.
+
 
 ////
 # FRR BFD Session
