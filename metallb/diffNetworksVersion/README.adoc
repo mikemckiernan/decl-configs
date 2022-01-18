@@ -551,9 +551,27 @@ exit
 
 === Add a static route to the next-hop-router for the load balancer IP address
 
-FIXME, I'm failing my own IQ test.
-I cannot determine why the following steps do not result in connectivity between
-`curl` from the `frr1` container and the load balancer IP address.
+The following steps add a static route to the `next-hop-router` container.
+The purpose of the route is to direct packets to the `kind-worker` node.
+This is highly contrived.
+
+It is possible that customers would configure the `next-hop-router` as a BGP peer.
+This is completely plausible because in the network toplogy, it is positioned as
+a _top of rack_ router.
+If it were configured as a BGP peer, there's no need for a static route or any other configuration steps.
+
+. Determine the IP address of the `kind-worker` node:
++
+[source,terminal]
+----
+oc get node kind-worker -o jsonpath="{.status.addresses[0].address}"
+----
++
+.Example output
+[source,text]
+----
+10.0.1.3
+----
 
 . Log on to the `next-hop-router` container:
 +
@@ -568,11 +586,11 @@ docker exec -it next-hop-router ash
 / #
 ----
 
-. Add a static route for the load balancer IP address:
+. Add a static route for the load balancer IP address to the `kind-worker` IP address:
 +
 [source,terminal]
 ----
-ip route add 203.0.113.200/32 via 10.0.1.5 dev eth1
+ip route add 203.0.113.200/32 via 10.0.1.3 dev eth1
 ----
 +
 On success, there is no response from the `ip` command.
@@ -590,15 +608,16 @@ ip r
 default via 10.0.1.1 dev eth1
 10.0.1.0/24 dev eth1 scope link  src 10.0.1.5
 10.0.2.0/24 dev eth0 scope link  src 10.0.2.2
-203.0.113.200 via 10.0.1.5 dev eth1
+203.0.113.200 via 10.0.1.3 dev eth1
 ----
-+
-Here's the problem.
-I should be able to repeat the `curl` command from the
-"Confirm that the frr1 container..." section, but this time,
-the `curl` should succeed.
-I'm stumped.
 
+. Repeat the steps under "Confirm that the frr1 container cannot reach the load balancer IP address".
+This time, the `curl` command should return a response like the following example:
++
+[source,text]
+----
+NOW: 2022-01-18 18:00:12.250346996 +0000 UTC m=+101230.670688821
+----
 
 ////
 # FRR BFD Session

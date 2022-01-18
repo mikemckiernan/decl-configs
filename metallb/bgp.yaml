@@ -10,7 +10,7 @@ spec:
   myASN: 64500
   holdTime: "15s"
   keepaliveTime: "10s"
-  # routerID: 10.0.1.2
+  # routerID: 10.10.10.10
   bfdProfile: doc-example-bfd-profile-full
 ---
 apiVersion: metallb.io/v1beta1
@@ -24,6 +24,6 @@ spec:
   myASN: 64500
   holdTime: "15s"
   keepaliveTime: "10s"
-  # routerID: 10.0.1.2
+  # routerID: 10.10.10.10
   bfdProfile: doc-example-bfd-profile-full
 
